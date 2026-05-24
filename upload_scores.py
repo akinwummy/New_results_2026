@@ -13,7 +13,7 @@ with open("scores.csv", "r", encoding="utf-8") as file:
     for row in reader:
         cur.execute("""
             INSERT INTO scores (
-                matricno,
+                matric_no,
                 student_name,
                 ca1,
                 exam1,
@@ -24,7 +24,7 @@ with open("scores.csv", "r", encoding="utf-8") as file:
             )
             VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
 
-            ON CONFLICT (matricno)
+            ON CONFLICT (matric_no)
             DO UPDATE SET
                 student_name = EXCLUDED.student_name,
                 ca1 = EXCLUDED.ca1,
@@ -34,7 +34,7 @@ with open("scores.csv", "r", encoding="utf-8") as file:
                 exam2 = EXCLUDED.exam2,
                 total2 = EXCLUDED.total2;
         """, (
-            row["matricno"],
+            row["matric_no"],
             row["student_name"],
             int(row["ca1"]),
             int(row["exam1"]),
