@@ -4,7 +4,7 @@ import os
 
 app = Flask(__name__)
 
-# --- DB CONNECTION (FIXED & ROBUST) ---
+# --- DB CONNECTION ---
 def get_db_connection():
     try:
         database_url = os.environ.get("DATABASE_URL")
@@ -12,17 +12,39 @@ def get_db_connection():
         if not database_url:
             raise Exception("DATABASE_URL not set")
 
-        conn = psycopg2.connect(
-            database_url,
-            sslmode="require"
-        )
-
+        conn = psycopg2.connect(database_url, sslmode="require")
         conn.autocommit = True
         return conn
 
     except Exception as e:
         print("DB error:", e)
         return None
+
+
+# --- AUTO CREATE TABLE (IMPORTANT FIX) ---
+def init_db():
+    conn = get_db_connection()
+    if conn:
+        cur = conn.cursor()
+
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS scores (
+                matric_no TEXT PRIMARY KEY,
+                student_name TEXT,
+                ca1 INT,
+                exam1 INT,
+                total1 INT,
+                ca2 INT,
+                exam2 INT,
+                total2 INT
+            );
+        """)
+
+        conn.commit()
+        cur.close()
+        conn.close()
+
+        print("✅ scores table ready")
 
 
 # --- HTML TEMPLATE ---
@@ -161,6 +183,7 @@ def check():
     return {"sample": data}
 
 
-# --- RUN ---
+# --- APP START ---
 if __name__ == '__main__':
+    init_db()   # 🔥 THIS FIXES YOUR MAIN PROBLEM
     app.run(host='0.0.0.0', port=int(os.environ.get("PORT", 10000)))
