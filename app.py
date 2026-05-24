@@ -2,8 +2,6 @@ from flask import Flask, request, render_template_string
 import psycopg2
 import os
 
-
-
 app = Flask(__name__)
 
 # --- DB CONNECTION ---
@@ -232,6 +230,32 @@ def upload():
     </form>
     <p>{message}</p>
     """
+@app.route('/create-table')
+def create_table():
+    conn = get_db_connection()
+    if not conn:
+        return "DB connection failed"
+
+    cur = conn.cursor()
+
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS scores (
+            matric_no TEXT PRIMARY KEY,
+            student_name TEXT,
+            ca1 INT,
+            exam1 INT,
+            total1 INT,
+            ca2 INT,
+            exam2 INT,
+            total2 INT
+        );
+    """)
+
+    conn.commit()
+    cur.close()
+    conn.close()
+
+    return "✅ Table created successfully"
 
 def check():
     conn = get_db_connection()
