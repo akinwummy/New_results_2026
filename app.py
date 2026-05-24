@@ -2,6 +2,8 @@ from flask import Flask, request, render_template_string
 import psycopg2
 import os
 
+
+
 app = Flask(__name__)
 
 # --- DB CONNECTION ---
@@ -168,6 +170,69 @@ def debug():
 
 # --- CHECK DATA ---
 @app.route('/check')
+
+@app.route('/upload', methods=['GET', 'POST'])
+def upload():
+    message = ""
+
+    if request.method == 'POST':
+        file = request.files['file']
+
+        if not file:
+            return "No file uploaded"
+
+        import csv
+        import io
+
+        stream = io.StringIO(file.stream.read().decode("utf-8"))
+        reader = csv.DictReader(stream)
+
+        conn = get_db_connection()
+        cur = conn.cursor()
+
+        for row in reader:
+            cur.execute("""
+                INSERT INTO scores (
+                    matric_no, student_name,
+                    ca1, exam1, total1,
+                    ca2, exam2, total2
+                )
+                VALUES (%s,%s,%s,%s,%s,%s,%s,%s)
+                ON CONFLICT (matric_no)
+                DO UPDATE SET
+                    student_name = EXCLUDED.student_name,
+                    ca1 = EXCLUDED.ca1,
+                    exam1 = EXCLUDED.exam1,
+                    total1 = EXCLUDED.total1,
+                    ca2 = EXCLUDED.ca2,
+                    exam2 = EXCLUDED.exam2,
+                    total2 = EXCLUDED.total2;
+            """, (
+                row["matric_no"],
+                row["student_name"],
+                row["ca1"],
+                row["exam1"],
+                row["total1"],
+                row["ca2"],
+                row["exam2"],
+                row["total2"]
+            ))
+
+        conn.commit()
+        cur.close()
+        conn.close()
+
+        message = "✅ Upload successful"
+
+    return f"""
+    <h2>Upload Scores CSV</h2>
+    <form method="POST" enctype="multipart/form-data">
+        <input type="file" name="file" required>
+        <button type="submit">Upload</button>
+    </form>
+    <p>{message}</p>
+    """
+
 def check():
     conn = get_db_connection()
     if not conn:
