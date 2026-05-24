@@ -100,7 +100,7 @@ def index():
                         ca2,
                         exam2,
                         total2
-                    FROM public.student_results
+                    FROM public.Newresults
                     WHERE BTRIM(matric_no) = %s
                 """, (matric_no,))
 
@@ -152,7 +152,7 @@ def check():
         return "❌ Cannot connect"
 
     cur = conn.cursor()
-    cur.execute("SELECT matric_no, student_name FROM public.student_results LIMIT 10;")
+    cur.execute("SELECT matric_no, student_name FROM public.Newresults LIMIT 10;")
     data = cur.fetchall()
 
     cur.close()
